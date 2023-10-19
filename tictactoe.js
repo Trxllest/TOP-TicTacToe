@@ -98,29 +98,33 @@ function GameController( playerOneName = 'Player One', playerTwoName = 'Player T
         console.log(`${getActivePlayer().name}'s turn.`);
     };
 
+    let gameOver = false;
+
+    const getGameStatus = () => gameOver;
+
     /*  This is where we would check for a winner and handle that logic,
     such as a win message. */
     const checkForWin = (board, player) => {
         // Check rows
         for (let i = 0; i < board.length; i++) {
             if (board[i].every(cell => cell.getValue() === player)) {
-                return true;
+                return true
             }
         }
         
         // Check columns
         for (let i = 0; i < board[0].length; i++) {
             if (board.every(row => row[i].getValue() === player)) {
-                return true;
+                return true
             }
         }
 
         // Check diagonals
         if (board[0][0].getValue() === player && board[1][1].getValue() === player && board[2][2].getValue() === player) {
-            return true;
+            return true
         }
         if (board[0][2].getValue() === player && board[1][1].getValue() === player && board[2][0].getValue() === player) {
-            return true;
+            return true
         }
 
         return false;
@@ -149,10 +153,12 @@ function GameController( playerOneName = 'Player One', playerTwoName = 'Player T
        // Check for a win
         if (checkForWin(board.getBoard(), getActivePlayer().token)) {
             console.log(`${getActivePlayer().name} wins!`);
+            gameOver = true;
             // Handle the win logic here, such as displaying a message and resetting the board.
             // You can reset the board by creating a new Gameboard instance.
         } else if (checkForDraw(board.getBoard())) {
             console.log("It's a draw!");
+            gameOver = true;
             // Handle the draw logic here, such as displaying a draw message and resetting the board.
             // You can reset the board by creating a new Gameboard instance.
         } else {
@@ -174,7 +180,8 @@ function GameController( playerOneName = 'Player One', playerTwoName = 'Player T
     return {
         playRound,
         getActivePlayer,
-        getBoard: board.getBoard
+        getBoard: board.getBoard,
+        getGameStatus
   };
 
 }
@@ -219,19 +226,23 @@ function ScreenController() {
         const selectedRow = e.target.dataset.row;
         // Make sure I've clicked a column and not the gaps in between
         if (!selectedColumn && !selectedRow) return;
-        
-        game.playRound(selectedRow, selectedColumn);
 
+
+        game.playRound(selectedRow, selectedColumn);
         updateScreen();
     }
-    boardDiv.addEventListener("click", clickHandlerBoard);
 
-    // Initial render
-    updateScreen();
+    // check if game is over after playing a round
+    if (game.getGameStatus()) {
+        return;
+    } else{
+        boardDiv.addEventListener("click", clickHandlerBoard);
+        // Initial render
+        updateScreen();
+    }
+    
 
     // We don't need to return anything from this module because everything is encapsulated inside this screen controller.
-
-      
 }
 
 ScreenController();
