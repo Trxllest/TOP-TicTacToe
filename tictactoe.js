@@ -9,14 +9,16 @@ A dropToken method to be able to add Cells to squares
 function Gameboard() {
     const rows = 3;
     const cols = 3;
-    const board = [];
+    let board = [];
 
     //3x3 array representing board row 0 is the top row and col 0 is the left col
-
-    for (let i = 0; i < rows; i++) {
-        board[i] = [];
-        for(let j = 0; j < cols; j++) {
-            board[i].push(Cell());
+    const freshBoard = () => {
+        board = [];
+        for (let i = 0; i < rows; i++) {
+            board[i] = [];
+            for(let j = 0; j < cols; j++) {
+                board[i].push(Cell());
+            }
         }
     }
 
@@ -42,8 +44,8 @@ function Gameboard() {
         const boardWithCellVals = board.map((row) => row.map((cell) => cell.getValue()));
         console.log(boardWithCellVals);
     };
-
-    return {getBoard, dropToken, printBoard};
+    freshBoard();
+    return {getBoard, dropToken, printBoard, freshBoard};
 
 }
 
@@ -94,8 +96,15 @@ function GameController( playerOneName = 'Player One', playerTwoName = 'Player T
     const getActivePlayer = () => activePlayer;
 
     const printNewRound = () => {
-        board.printBoard();
-        console.log(`${getActivePlayer().name}'s turn.`);
+        if (gameOver) {
+            // gameOver = false;
+            // board.freshBoard();
+            board.printBoard(); 
+            console.log(`New Game...`);
+        } else{
+            board.printBoard();
+            console.log(`${getActivePlayer().name}'s turn.`);
+        }
     };
 
     let gameOver = false;
@@ -150,15 +159,17 @@ function GameController( playerOneName = 'Player One', playerTwoName = 'Player T
         board.dropToken(row,col, getActivePlayer().token);
     
          
-       // Check for a win
+        // Check for a win
         if (checkForWin(board.getBoard(), getActivePlayer().token)) {
             console.log(`${getActivePlayer().name} wins!`);
             gameOver = true;
+            printNewRound();
             // Handle the win logic here, such as displaying a message and resetting the board.
             // You can reset the board by creating a new Gameboard instance.
         } else if (checkForDraw(board.getBoard())) {
             console.log("It's a draw!");
             gameOver = true;
+            printNewRound();
             // Handle the draw logic here, such as displaying a draw message and resetting the board.
             // You can reset the board by creating a new Gameboard instance.
         } else {
@@ -232,14 +243,10 @@ function ScreenController() {
         updateScreen();
     }
 
-    // check if game is over after playing a round
-    if (game.getGameStatus()) {
-        return;
-    } else{
-        boardDiv.addEventListener("click", clickHandlerBoard);
-        // Initial render
-        updateScreen();
-    }
+    boardDiv.addEventListener("click", clickHandlerBoard);
+    // Initial render
+    updateScreen();
+    
     
 
     // We don't need to return anything from this module because everything is encapsulated inside this screen controller.
