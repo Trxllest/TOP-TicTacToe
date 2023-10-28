@@ -39,11 +39,12 @@ function Gameboard() {
     };
 
 
-    //print the board
+    //print the board for the console
     const printBoard = () => {
         const boardWithCellVals = board.map((row) => row.map((cell) => cell.getValue()));
         console.log(boardWithCellVals);
     };
+    //initial board
     freshBoard();
     return {getBoard, dropToken, printBoard, freshBoard};
 
@@ -71,6 +72,10 @@ function Cell () {
     return {addToken, getValue};
 }
 
+const dialog = document.querySelector("dialog");
+// const showButton = document.querySelector("dialog + button");
+const closeButton = document.querySelector(".newGame-btn");
+
 
 function GameController( playerOneName = 'Player One', playerTwoName = 'Player Two') {
 
@@ -96,20 +101,9 @@ function GameController( playerOneName = 'Player One', playerTwoName = 'Player T
     const getActivePlayer = () => activePlayer;
 
     const printNewRound = () => {
-        if (gameOver) {
-            // gameOver = false;
-            // board.freshBoard();
-            board.printBoard(); 
-            console.log(`New Game...`);
-        } else{
-            board.printBoard();
-            console.log(`${getActivePlayer().name}'s turn.`);
-        }
+        board.printBoard();
+        console.log(`${getActivePlayer().name}'s turn.`);
     };
-
-    let gameOver = false;
-
-    const getGameStatus = () => gameOver;
 
     /*  This is where we would check for a winner and handle that logic,
     such as a win message. */
@@ -149,7 +143,24 @@ function GameController( playerOneName = 'Player One', playerTwoName = 'Player T
         }
         return true; // All cells are filled, and there's no winner, so it's a draw.
     }
-    
+
+    let gameOver = false;
+    let gameWinner = false;
+
+    const getGameStatus = () => gameOver;
+    const getWinner = () => gameWinner;
+
+    const newGame = () => {
+        dialog.showModal();
+        closeButton.addEventListener('click', () => {
+            board.freshBoard();
+            dialog.close();
+            gameWinner = false;
+            gameOver = false;}
+        );
+        board.printBoard();
+        console.log('New Game');
+    }
 
     const playRound = (row, col) => {
         // Drop a token for the current player
@@ -162,40 +173,37 @@ function GameController( playerOneName = 'Player One', playerTwoName = 'Player T
         // Check for a win
         if (checkForWin(board.getBoard(), getActivePlayer().token)) {
             console.log(`${getActivePlayer().name} wins!`);
+            gameWinner = true;
             gameOver = true;
-            printNewRound();
-            // Handle the win logic here, such as displaying a message and resetting the board.
-            // You can reset the board by creating a new Gameboard instance.
+            // newGame();
         } else if (checkForDraw(board.getBoard())) {
             console.log("It's a draw!");
             gameOver = true;
-            printNewRound();
-            // Handle the draw logic here, such as displaying a draw message and resetting the board.
-            // You can reset the board by creating a new Gameboard instance.
+            // newGame();
         } else {
             // Switch player turn
             switchPlayerTurn();
             printNewRound();
         }
 
-        // Switch player turn
-        // switchPlayerTurn();
-        // printNewRound();
-      };
+    };
 
     // Initial play game message
     printNewRound();
-
+    
     // For the console version, we will only use playRound, but we will need
     // getActivePlayer for the UI version, so I'm revealing it now
     return {
         playRound,
         getActivePlayer,
         getBoard: board.getBoard,
-        getGameStatus
+        newGame,
+        getGameStatus,
+        getWinner
   };
 
 }
+
 
 
 function ScreenController() {
@@ -211,9 +219,20 @@ function ScreenController() {
         // get the newest version of the board and player turn
         const board = game.getBoard();
         const activePlayer = game.getActivePlayer();
+        const gameStatus = game.getGameStatus();
+        const gameWinner = game.getWinner();
     
-        // Display player's turn
-        playerTurnDiv.textContent = `${activePlayer.name}'s turn...`
+        // Display player's turn or display winner
+        if (gameStatus & gameWinner) {
+            playerTurnDiv.textContent = `${activePlayer.name} Wins`;
+            game.newGame();
+        } else if (gameStatus) {
+            playerTurnDiv.textContent = `It's a Draw!`;
+            game.newGame();
+        } else {
+            playerTurnDiv.textContent = `${activePlayer.name}'s turn...`;
+        }
+        
     
         // Render board squares
         board.forEach( (row, rindex) => {
@@ -244,6 +263,7 @@ function ScreenController() {
     }
 
     boardDiv.addEventListener("click", clickHandlerBoard);
+    closeButton.addEventListener('click', updateScreen);
     // Initial render
     updateScreen();
     
@@ -251,5 +271,7 @@ function ScreenController() {
 
     // We don't need to return anything from this module because everything is encapsulated inside this screen controller.
 }
+
+
 
 ScreenController();
